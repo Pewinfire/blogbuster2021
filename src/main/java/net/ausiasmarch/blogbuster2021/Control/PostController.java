@@ -94,6 +94,7 @@ public class PostController extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        Helper.doCORS(request, response);
         Gson oGson = Helper.getGson();
         try ( PrintWriter out = response.getWriter()) {
             try {

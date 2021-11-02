@@ -20,6 +20,7 @@ import java.util.Properties;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+
 public class Helper {
 
     public static LocalDateTime convertToLocalDateViaInstant(Date dateToConvert) {

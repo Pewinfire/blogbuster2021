@@ -82,25 +82,38 @@ public class PostDAO {
         return iResult;
     }
 
-    public ArrayList<PostBean> getPage(int page, int rpp) throws SQLException {
+    public ArrayList<PostBean> getPage(int page, int rpp, String order, String dir, String filter, String match) throws SQLException {
         PreparedStatement oPreparedStatement;
         ResultSet oResultSet;
+        String statement ="";
         int offset;
         if (page > 0 && rpp > 0) {
             offset = (rpp * page) - rpp;
         } else {
             throw new InternalServerErrorException("Página incorrecta");
         }
-        oPreparedStatement = oConnection.prepareStatement("SELECT * FROM post LIMIT ? OFFSET ?");
+        
+        if (!isNull(order) && isNull(match)) {
+            statement = "SELECT * FROM post ORDER BY " + order + " " + dir + "  LIMIT ? OFFSET ? ";
+        }else if(!isNull(order) && !isNull(match)) {
+            statement = "SELECT * FROM post WHERE "+ filter +" LIKE '%"+ match+ "%' or "+ filter +" LIKE '%"+ match+ "' or "+ filter +" LIKE '"+ match+ "%' or "+ filter +" LIKE '"+ match+ "' ORDER BY " + order + " " + dir + "  LIMIT ? OFFSET ? ";   
+        }else if(isNull(order) && !isNull(match)){
+            statement = "SELECT * FROM post WHERE "+ filter +" LIKE '%"+ match+ "%' or "+ filter +" LIKE '%"+ match+ "' or "+ filter +" LIKE '"+ match+ "%' or "+ filter +" LIKE '"+ match+ "' LIMIT ? OFFSET ? ";
+        }else{
+             statement = "SELECT * FROM post LIMIT ? OFFSET ? ";
+        }
+        System.out.print(statement);
+        oPreparedStatement = oConnection.prepareStatement(statement);
         oPreparedStatement.setInt(1, rpp);
         oPreparedStatement.setInt(2, offset);
+
         oResultSet = oPreparedStatement.executeQuery();
         ArrayList<PostBean> oPostBeanList = new ArrayList<>();
         while (oResultSet.next()) {
             PostBean oPostBean = new PostBean();
             oPostBean.setId(oResultSet.getInt("id"));
             oPostBean.setTitulo(oResultSet.getString("titulo"));
-            oPostBean.setCuerpo(oResultSet.getString("cuerpo"));            
+            oPostBean.setCuerpo(oResultSet.getString("cuerpo"));
             oPostBean.setFecha(oResultSet.getTimestamp("fecha").toLocalDateTime());
             oPostBean.setEtiquetas(oResultSet.getString("etiquetas"));
             oPostBean.setVisible(oResultSet.getBoolean("visible"));
@@ -108,8 +121,8 @@ public class PostDAO {
         }
         return oPostBeanList;
     }
-    
-    public int getCount() throws SQLException{
+
+    public int getCount() throws SQLException {
         PreparedStatement oPreparedStatement;
         ResultSet oResultSet;
         oPreparedStatement = oConnection.prepareStatement("SELECT count(*) FROM post");
@@ -118,7 +131,23 @@ public class PostDAO {
             return oResultSet.getInt(1);
         } else {
             throw new InternalServerErrorException("Error en getCount");
-        }        
+        }
     }
-
+/*
+    public boolean getOrder(String order) {
+        if (order.equalsIgnoreCase("id") || order.equalsIgnoreCase("titulo") || order.equalsIgnoreCase("cuerpo") || order.equalsIgnoreCase("fecha") || order.equalsIgnoreCase("etiquetas") || order.equalsIgnoreCase("visible")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+*/
+    public boolean isNull(String value){
+        if (value.isBlank() || value.equalsIgnoreCase("nulo")) {
+            return true;
+        }else {
+            return false;
+            
+        }
+    }
 }
