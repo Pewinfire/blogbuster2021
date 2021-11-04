@@ -85,22 +85,26 @@ public class PostDAO {
     public ArrayList<PostBean> getPage(int page, int rpp, String order, String dir, String filter, String match) throws SQLException {
         PreparedStatement oPreparedStatement;
         ResultSet oResultSet;
-        String statement ="";
+        String statement = "";
         int offset;
         if (page > 0 && rpp > 0) {
             offset = (rpp * page) - rpp;
         } else {
             throw new InternalServerErrorException("Página incorrecta");
         }
-        
+
         if (!isNull(order) && isNull(match)) {
             statement = "SELECT * FROM post ORDER BY " + order + " " + dir + "  LIMIT ? OFFSET ? ";
-        }else if(!isNull(order) && !isNull(match)) {
-            statement = "SELECT * FROM post WHERE "+ filter +" LIKE '%"+ match+ "%' or "+ filter +" LIKE '%"+ match+ "' or "+ filter +" LIKE '"+ match+ "%' or "+ filter +" LIKE '"+ match+ "' ORDER BY " + order + " " + dir + "  LIMIT ? OFFSET ? ";   
-        }else if(isNull(order) && !isNull(match)){
-            statement = "SELECT * FROM post WHERE "+ filter +" LIKE '%"+ match+ "%' or "+ filter +" LIKE '%"+ match+ "' or "+ filter +" LIKE '"+ match+ "%' or "+ filter +" LIKE '"+ match+ "' LIMIT ? OFFSET ? ";
-        }else{
-             statement = "SELECT * FROM post LIMIT ? OFFSET ? ";
+        } else if (!isNull(order) && !isNull(match)) {
+            statement = "SELECT * FROM post WHERE " + filter + " LIKE '%" + match + "%' ORDER BY " + order + " " + dir + "  LIMIT ? OFFSET ? ";
+        } else if (isNull(order) && isNull(filter) && !isNull(match)) {
+            statement = "SELECT * FROM post WHERE  CONCAT_WS(id, titulo, cuerpo, etiquetas, fecha) LIKE '%" + match + "%'  LIMIT ? OFFSET ? ";
+        } else if (!isNull(order) && isNull(filter) && !isNull(match)) {
+            statement = "SELECT * FROM post WHERE  CONCAT_WS(id, titulo, cuerpo, etiquetas, fecha) LIKE '%" + match + "%' ORDER BY " + order + " " + dir + " LIMIT ? OFFSET ? ";
+        } else if (isNull(order) && !isNull(match)) {
+            statement = "SELECT * FROM post WHERE " + filter + " LIKE '%" + match + "%'  LIMIT ? OFFSET ? ";
+        } else {
+            statement = "SELECT * FROM post LIMIT ? OFFSET ? ";
         }
         System.out.print(statement);
         oPreparedStatement = oConnection.prepareStatement(statement);
@@ -133,7 +137,8 @@ public class PostDAO {
             throw new InternalServerErrorException("Error en getCount");
         }
     }
-/*
+
+    /*
     public boolean getOrder(String order) {
         if (order.equalsIgnoreCase("id") || order.equalsIgnoreCase("titulo") || order.equalsIgnoreCase("cuerpo") || order.equalsIgnoreCase("fecha") || order.equalsIgnoreCase("etiquetas") || order.equalsIgnoreCase("visible")) {
             return true;
@@ -141,13 +146,13 @@ public class PostDAO {
             return false;
         }
     }
-*/
-    public boolean isNull(String value){
+     */
+    public boolean isNull(String value) {
         if (value.isBlank() || value.equalsIgnoreCase("nulo")) {
             return true;
-        }else {
+        } else {
             return false;
-            
+
         }
     }
 }
